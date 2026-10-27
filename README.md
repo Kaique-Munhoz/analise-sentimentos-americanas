@@ -1,35 +1,100 @@
 # Análise de Sentimentos e Tópicos em Avaliações de E-commerce
 
-Projeto acadêmico de **Processamento de Linguagem Natural (NLP)** utilizando avaliações reais do conjunto **B2W-Reviews01** (Americanas).
+**Projeto acadêmico de Ciência de Dados e Processamento de Linguagem Natural (NLP) — PUC-SP**
 
-## Objetivo
-Classificar avaliações em sentimentos negativo, neutro e positivo; avaliar criticamente os erros e identificar assuntos recorrentes que possam orientar investigações de negócio.
+Este projeto analisa avaliações reais do conjunto **B2W-Reviews01 (Americanas)** para classificar sentimentos, investigar limitações dos modelos e identificar temas recorrentes que possam apoiar decisões de negócio.
 
-## Dados
-O conjunto contém **132.373 avaliações**. A coluna `overall_rating` foi convertida em três classes: 1–2 estrelas (negativo), 3 (neutro) e 4–5 (positivo). A variável `recommend_to_a_friend` foi utilizada na auditoria dos rótulos.
+## Objetivos
+
+- Auditar a qualidade dos dados e a consistência dos rótulos.
+- Classificar avaliações em **negativas, neutras e positivas**.
+- Comparar modelos de Machine Learning com um baseline simples.
+- Investigar erros e métricas por classe, em vez de confiar apenas na acurácia.
+- Identificar temas recorrentes com **NMF** e relacioná-los aos sentimentos.
+
+## Base de dados
+
+- **132.373 avaliações** e 14 colunas no arquivo original.
+- **129.098 avaliações com texto**, utilizadas na modelagem textual.
+- **3.275 avaliações sem texto**.
+- **126.724 textos distintos não nulos** e **2.374 repetições** entre os textos não nulos.
+
+### Definição dos sentimentos
+
+O rótulo foi criado a partir de `overall_rating`:
+
+| Nota | Classe |
+|---|---|
+| 1–2 estrelas | Negativo |
+| 3 estrelas | Neutro |
+| 4–5 estrelas | Positivo |
+
+A coluna `recommend_to_a_friend` foi utilizada para auditar a consistência dessa regra. **88,47% das avaliações de três estrelas indicavam recomendação do produto**, sugerindo que a definição operacional da classe neutra é ambígua.
 
 ![Distribuição das notas](imagens/distribuicao_notas.png)
 
 ## Metodologia
+
 1. **Auditoria:** valores ausentes, duplicatas, distribuição das notas e consistência dos rótulos.
-2. **Representação textual:** TF-IDF com unigramas e bigramas; divisão estratificada em treino e teste.
-3. **Classificação:** Regressão Logística e Linear SVM; avaliação por acurácia, macro-F1, recall e matriz de confusão.
-4. **Análise de erros:** identificação de avaliações ambíguas e linguagem mista.
-5. **Tópicos:** NMF para explorar temas recorrentes e cruzar temas com sentimentos.
+2. **Preparação textual:** inspeção de URLs, HTML, repetições e comprimento dos textos; limpeza conservadora para preservar informações de sentimento.
+3. **Vetorização:** TF-IDF com unigramas e bigramas, ajustado somente sobre o conjunto de treino.
+4. **Classificação:** Regressão Logística e Linear SVM, com separação estratificada de 80% para treino e 20% para teste.
+5. **Avaliação:** baseline, acurácia, Macro-F1, recall por classe, matriz de confusão e análise de erros.
+6. **Tópicos:** NMF, comparação de soluções com 6, 8 e 10 tópicos e interpretação dos oito temas escolhidos.
 
-## Principais aprendizados
-Em uma análise anterior do projeto, a Regressão Logística apresentou **aproximadamente 84,6% de acurácia**, mas apenas **23,6% de recall na classe neutra**. A auditoria também identificou que **aproximadamente 88,5% das avaliações de três estrelas recomendavam o produto**, indicando ambiguidade na definição operacional de neutralidade. **Reexecute o notebook para reproduzir e validar esses resultados antes de divulgá-los como resultados finais.**
+## Resultados dos classificadores
 
-## Como executar
-1. Baixe o dataset original `B2W-Reviews01.csv` da fonte B2W/Americanas e coloque-o na pasta do projeto.
-2. Instale as dependências: `pip install -r requirements.txt`.
-3. Abra `projeto_nlp_americanas.ipynb` no Jupyter ou VS Code e execute as células na ordem.
-4. Revise os nomes interpretativos dos tópicos NMF a partir dos termos efetivamente encontrados. Os nomes provisórios no notebook não são resultados finais.
+Resultados salvos no notebook executado:
 
-**Observação:** o dataset não é incluído no repositório para evitar redistribuição desnecessária. Os gráficos de modelos e tópicos são gerados durante a execução; não são apresentados como resultados executados neste pacote.
+| Métrica | Resultado |
+|---|---:|
+| Baseline — acurácia no teste | 61,44% |
+| Regressão Logística — acurácia | **84,59%** |
+| Regressão Logística — Macro-F1 | **70,09%** |
+| Regressão Logística — recall negativo | 90,01% |
+| Regressão Logística — recall neutro | **23,24%** |
+| Regressão Logística — recall positivo | 94,66% |
+| Linear SVM — acurácia | 84,04% |
+| Linear SVM — Macro-F1 | 70,21% |
+| Linear SVM — recall neutro | 25,58% |
+
+**Principal aprendizado:** embora a Regressão Logística tenha alcançado 84,59% de acurácia, reconheceu corretamente apenas cerca de 23 em cada 100 avaliações rotuladas como neutras. Isso mostra por que uma métrica global não é suficiente para avaliar a qualidade de um classificador.
+
+## Temas identificados com NMF
+
+Os oito tópicos foram nomeados após a inspeção dos termos mais representativos:
+
+| Tópico | Interpretação |
+|---|---|
+| 0 | Entrega rápida |
+| 1 | Não recebimento do produto |
+| 2 | Cumprimento do prazo |
+| 3 | Avaliação geral do produto |
+| 4 | Qualidade do produto |
+| 5 | Custo-benefício |
+| 6 | Atendimento às expectativas |
+| 7 | Satisfação e recomendação |
+
+No cruzamento entre tema e sentimento, o tópico **Não recebimento do produto** apresentou **58,35% de avaliações negativas**, enquanto **Satisfação e recomendação** apresentou **91,44% de avaliações positivas**. Essas relações são **associações observadas**, não evidências de causalidade.
 
 ## Tecnologias
-Python · Pandas · scikit-learn · TF-IDF · Regressão Logística · Linear SVM · NMF · Matplotlib
 
-## Contexto
-Projeto acadêmico — Ciência de Dados e Inteligência Artificial, PUC-SP.
+**Python · Pandas · NumPy · scikit-learn · Matplotlib · TF-IDF · Regressão Logística · Linear SVM · NMF · NLP**
+
+## Como executar
+
+1. Obtenha o arquivo original `B2W-Reviews01.csv` na fonte pública do conjunto B2W-Reviews01.
+2. Coloque o CSV na mesma pasta de `projeto_nlp_americanas.ipynb`.
+3. Instale as dependências:
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. Abra o notebook no **Jupyter** ou **Google Colab** e execute as células na ordem.
+
+> O CSV não é incluído neste repositório. O notebook contém as etapas de análise e os resultados de sua execução; métricas podem variar se os dados ou configurações forem alterados.
+
+## Conclusão
+
+O projeto demonstra um fluxo de NLP que vai além do treinamento de classificadores: inclui auditoria, validação, análise de erros e interpretação de tópicos. O principal resultado metodológico foi identificar que uma boa acurácia geral pode esconder desempenho insuficiente em uma classe específica, especialmente quando a própria definição do rótulo apresenta ambiguidades.
